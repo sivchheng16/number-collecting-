@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Keyboard, Check, ArrowRight, X, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Keyboard, Check, ArrowRight, X } from 'lucide-react';
 
 interface TutorialProps {
   onComplete: () => void;
@@ -110,7 +110,7 @@ const HandOverlay = ({ activeFinger }: { activeFinger?: string }) => {
         <g transform="translate(50, 100)">
           {/* Wrist */}
           <path d="M 50 280 Q 60 220 40 180" fill="none" stroke="#374151" strokeWidth="2" />
-          
+
           {/* Pinky (1, Q, A, Z) */}
           <g className="transition-all duration-300" style={{ opacity: getFingerOpacity('l_pinky') }}>
             <path d="M 40 180 Q 30 140 35 110" fill="none" stroke={getFingerColor('l_pinky')} strokeWidth="3" />
@@ -189,12 +189,12 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
   const [sequenceIndex, setSequenceIndex] = useState(0);
   const [input, setInput] = useState('');
   const [isError, setIsError] = useState(false);
-  const [showFullLayout, setShowFullLayout] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const step = STEPS[currentStep];
-  
+
   // Determine active finger for current target
   const targetChar = step.action === 'type_sequence' ? step.sequence![sequenceIndex] : null;
   const activeFinger = targetChar ? KEY_MAP[targetChar] : undefined;
@@ -209,7 +209,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const ctx = audioContextRef.current;
-    
+
     // Resume context if suspended (browser policy)
     if (ctx.state === 'suspended') {
       ctx.resume();
@@ -279,11 +279,11 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (step.action !== 'type_sequence') return;
     if (isError) return; // Prevent typing during error animation
-    
+
     const val = e.target.value.toUpperCase();
     const inputChar = val.slice(-1); // Get the last character typed
     const target = step.sequence![sequenceIndex];
-    
+
     // Only allow correct character
     if (inputChar === target) {
       playSound('correct');
@@ -322,23 +322,12 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
     const finger = KEY_MAP[char];
     const colorClass = finger ? FINGER_COLORS[finger as keyof typeof FINGER_COLORS] : 'bg-gray-700';
     const isTarget = step.action === 'type_sequence' && step.sequence![sequenceIndex] === char;
-    const isHomeRow = ['A','S','D','F','G','H','J','K','L',';'].includes(char);
-    
-    // Determine background color
-    let bgClass = 'bg-gray-800 text-gray-400';
-    
-    // Always color keys if keyboard is shown and they map to a finger
-    if (step.showKeyboard && finger) {
-       if (FINGER_COLORS[finger as keyof typeof FINGER_COLORS]) {
-         // Use a darker shade for base state, bright for active
-         const baseColor = FINGER_COLORS[finger as keyof typeof FINGER_COLORS].replace('bg-', 'bg-opacity-20 bg-');
-         bgClass = baseColor + ' text-white border-transparent';
-       }
-    }
 
-    if (step.highlightNumbers && !isNaN(Number(char))) bgClass = colorClass;
-    
-    if (isTarget) bgClass = colorClass;
+    // All mapped keys show their finger color at full brightness
+    let bgClass = 'bg-gray-800 text-gray-400';
+    if (finger) {
+      bgClass = colorClass + ' text-white';
+    }
 
     return (
       <div className={`
@@ -360,7 +349,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
 
   return (
     <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex flex-col items-center justify-center p-8 overflow-y-auto">
-      <button 
+      <button
         onClick={onExit}
         className="absolute top-8 right-8 text-gray-500 hover:text-white flex items-center gap-2"
       >
@@ -379,18 +368,18 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
           {step.action === 'type_sequence' && (
             <div className="flex flex-col items-center gap-6 z-30">
               <div className="flex gap-4">
-                 {step.sequence!.map((char, idx) => (
-                   <div key={idx} className={`
+                {step.sequence!.map((char, idx) => (
+                  <div key={idx} className={`
                      w-12 h-16 rounded-lg flex items-center justify-center text-2xl font-bold border-2 transition-all
                      ${idx < sequenceIndex ? 'bg-green-500/20 border-green-500 text-green-500' : ''}
                      ${idx === sequenceIndex ? 'bg-blue-500/20 border-blue-500 text-white scale-110 shadow-[0_0_20px_rgba(59,130,246,0.5)]' : ''}
                      ${idx > sequenceIndex ? 'bg-gray-800 border-gray-700 text-gray-600' : ''}
                    `}>
-                     {idx < sequenceIndex ? <Check className="w-6 h-6" /> : char}
-                   </div>
-                 ))}
+                    {idx < sequenceIndex ? <Check className="w-6 h-6" /> : char}
+                  </div>
+                ))}
               </div>
-              
+
               {activeFinger && (
                 <div className="text-lg font-mono text-blue-400 animate-pulse bg-blue-900/20 px-4 py-2 rounded-full border border-blue-500/30">
                   Use <span className="font-bold text-white">{FINGER_NAMES[activeFinger]}</span> to press <span className="font-bold text-white">{targetChar}</span>
@@ -400,99 +389,47 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
           )}
 
           {step.showKeyboard && (
-            <div className="relative flex flex-col gap-2 p-8 pt-12 bg-gray-900/50 rounded-xl border border-gray-800 transition-all duration-300">
-              {/* View Toggle */}
-              <div className="absolute top-4 right-4 z-30">
-                <button 
-                  onClick={() => setShowFullLayout(!showFullLayout)}
-                  className="flex items-center gap-2 text-xs text-gray-500 hover:text-white transition-colors bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700"
-                >
-                  {showFullLayout ? <ToggleRight className="w-4 h-4 text-blue-500" /> : <ToggleLeft className="w-4 h-4" />}
-                  Full Keyboard
-                </button>
+            <div className="relative flex flex-col gap-2 p-8 bg-gray-900/50 rounded-xl border border-gray-800 transition-all duration-300">
+              {/* Full Keyboard Layout */}
+              <div className="flex flex-col gap-1 select-none">
+                {/* Row 1 - Number Row */}
+                <div className="flex gap-1 justify-center">
+                  <ModifierKey label="~" width="w-8" />
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
+                  <ModifierKey label="-" />
+                  <ModifierKey label="=" />
+                  <ModifierKey label="Backspace" width="w-16" />
+                </div>
+                {/* Row 2 - QWERTY */}
+                <div className="flex gap-1 justify-center">
+                  <ModifierKey label="Tab" width="w-12" />
+                  {['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
+                  <ModifierKey label="[" />
+                  <ModifierKey label="]" />
+                  <ModifierKey label="\" width="w-12" />
+                </div>
+                {/* Row 3 - Home Row */}
+                <div className="flex gap-1 justify-center">
+                  <ModifierKey label="Caps" width="w-14" />
+                  {['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
+                  <ModifierKey label="'" />
+                  <ModifierKey label="Enter" width="w-20" className="bg-blue-900/20 text-blue-500" />
+                </div>
+                {/* Row 4 - Bottom Row */}
+                <div className="flex gap-1 justify-center">
+                  <ModifierKey label="Shift" width="w-20" />
+                  {['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
+                  <ModifierKey label="Shift" width="w-24" />
+                </div>
+                {/* Row 5 - Space */}
+                <div className="flex gap-1 justify-center">
+                  <ModifierKey label="Ctrl" width="w-12" />
+                  <ModifierKey label="Alt" width="w-12" />
+                  <div className="w-64 h-10 bg-gray-800 rounded border-b-4 border-black/20 flex items-center justify-center text-xs text-gray-600">SPACE</div>
+                  <ModifierKey label="Alt" width="w-12" />
+                  <ModifierKey label="Ctrl" width="w-12" />
+                </div>
               </div>
-
-              {/* Overlay Hands - Hide in full layout to avoid misalignment */}
-              {!showFullLayout && <HandOverlay activeFinger={activeFinger} />}
-              
-              {showFullLayout ? (
-                // Full Layout
-                <div className="flex flex-col gap-1 select-none scale-90 origin-top">
-                  {/* Row 1 */}
-                  <div className="flex gap-1 justify-center">
-                    <ModifierKey label="~" width="w-8" />
-                    {['1','2','3','4','5','6','7','8','9','0'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
-                    <ModifierKey label="-" />
-                    <ModifierKey label="=" />
-                    <ModifierKey label="Backspace" width="w-16" />
-                  </div>
-                  {/* Row 2 */}
-                  <div className="flex gap-1 justify-center">
-                    <ModifierKey label="Tab" width="w-12" />
-                    {['Q','W','E','R','T','Y','U','I','O','P'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
-                    <ModifierKey label="[" />
-                    <ModifierKey label="]" />
-                    <ModifierKey label="\" width="w-12" />
-                  </div>
-                  {/* Row 3 */}
-                  <div className="flex gap-1 justify-center">
-                    <ModifierKey label="Caps" width="w-14" />
-                    {['A','S','D','F','G','H','J','K','L',';'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
-                    <ModifierKey label="'" />
-                    <ModifierKey label="Enter" width="w-20" className="bg-blue-900/20 text-blue-500" />
-                  </div>
-                  {/* Row 4 */}
-                  <div className="flex gap-1 justify-center">
-                    <ModifierKey label="Shift" width="w-20" />
-                    {['Z','X','C','V','B','N','M',',','.','/'].map(k => <React.Fragment key={k}>{renderKey(k)}</React.Fragment>)}
-                    <ModifierKey label="Shift" width="w-24" />
-                  </div>
-                  {/* Row 5 */}
-                  <div className="flex gap-1 justify-center">
-                    <ModifierKey label="Ctrl" width="w-12" />
-                    <ModifierKey label="Alt" width="w-12" />
-                    <div className="w-64 h-10 bg-gray-800 rounded border-b-4 border-black/20 flex items-center justify-center text-xs text-gray-600">SPACE</div>
-                    <ModifierKey label="Alt" width="w-12" />
-                    <ModifierKey label="Ctrl" width="w-12" />
-                  </div>
-                </div>
-              ) : (
-                // Compact Layout
-                <div className="flex flex-col gap-2">
-                  {/* Number Row */}
-                  <div className="flex gap-2 justify-center z-10">
-                    {['1','2','3','4','5','6','7','8','9','0'].map(k => (
-                      <React.Fragment key={k}>
-                        {renderKey(k)}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  {/* Top Row */}
-                  <div className="flex gap-2 justify-center z-10">
-                    {['Q','W','E','R','T','Y','U','I','O','P'].map(k => (
-                      <React.Fragment key={k}>
-                        {renderKey(k)}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  {/* Home Row */}
-                  <div className="flex gap-2 justify-center z-10">
-                    {['A','S','D','F','G','H','J','K','L',';'].map(k => (
-                      <React.Fragment key={k}>
-                        {renderKey(k)}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  {/* Bottom Row */}
-                  <div className="flex gap-2 justify-center z-10">
-                    {['Z','X','C','V','B','N','M',',','.','/'].map(k => (
-                      <React.Fragment key={k}>
-                        {renderKey(k)}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -500,7 +437,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
         {/* Input / Action Area */}
         <div className="flex justify-center mt-4">
           {step.action === 'press_any' ? (
-            <button 
+            <button
               onClick={nextStep}
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold flex items-center gap-3 animate-pulse"
             >
@@ -513,14 +450,14 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
                 type="text"
                 value={input}
                 onChange={handleChange}
-                animate={isError ? { 
-                  x: [-10, 10, -10, 10, 0], 
-                  color: "#ef4444", 
+                animate={isError ? {
+                  x: [-10, 10, -10, 10, 0],
+                  color: "#ef4444",
                   borderColor: "#ef4444",
                   backgroundColor: "rgba(239, 68, 68, 0.1)"
-                } : { 
-                  x: 0, 
-                  color: "#ffffff", 
+                } : {
+                  x: 0,
+                  color: "#ffffff",
                   borderColor: "#3b82f6",
                   backgroundColor: "transparent"
                 }}

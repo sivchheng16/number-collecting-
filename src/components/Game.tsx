@@ -71,7 +71,7 @@ const generateTask = (level: number, width: number, difficulty: Difficulty, mode
     const max = Math.pow(10, length) - 1;
     const num = randomInt(min, max);
     const text = num.toString();
-    
+
     // Ensure text fits within canvas width (approx char width 12px)
     const textWidth = text.length * 12;
     const x = randomInt(20, width - textWidth - 20);
@@ -249,13 +249,13 @@ export default function Game() {
 
       // Prevent default behavior for shortcuts to avoid browser conflicts
       if (['Escape', 'r', 'R', 'm', 'M'].includes(e.key)) {
-         // Don't prevent default for R/M if they are valid inputs (which they aren't currently, but good practice)
+        // Don't prevent default for R/M if they are valid inputs (which they aren't currently, but good practice)
       }
 
       switch (e.key) {
         case 'Escape':
           if (gameState !== 'menu') {
-             setGameState('menu');
+            setGameState('menu');
           }
           break;
         case 'r':
@@ -285,7 +285,7 @@ export default function Game() {
   // Input handling
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    
+
     if (gameState !== 'playing') {
       setInputValue(val);
       return;
@@ -316,7 +316,7 @@ export default function Game() {
       // Correct answer
       const task = tasks[matchIndex];
       createExplosion(task.x + 20, task.y + 10, task.color);
-      
+
       // Handle Power-ups
       let healthBonus = 2; // Base recovery for correct answer
 
@@ -329,24 +329,24 @@ export default function Game() {
           [task.powerUp!]: now + duration
         }));
       }
-      
+
       // Apply health recovery
       setHealth((prev) => Math.min(prev + healthBonus, 100));
-      
+
       // Update score
       const multiplier = stateRef.current.activeEffects.double > Date.now() ? 2 : 1;
       const points = 10 * stateRef.current.level * multiplier;
       setScore((prev) => prev + points);
-      
-      // Level up check
-      if ((score + points) > level * 500) {
+
+      // Level up check - use stateRef to avoid stale closure
+      if ((stateRef.current.score + points) > stateRef.current.level * 500) {
         setLevel((prev) => prev + 1);
         setHealth((prev) => Math.min(prev + 20, 100)); // Heal on level up
       }
-      
+
       // Remove task
       stateRef.current.tasks.splice(matchIndex, 1);
-      
+
       setInputValue('');
     }
   };
@@ -423,10 +423,10 @@ export default function Game() {
 
           // Draw Task
           ctx.font = '20px "JetBrains Mono", monospace';
-          
+
           // Check for matching prefix
-          const isMatching = stateRef.current.inputValue.length > 0 && 
-                             task.answer.startsWith(stateRef.current.inputValue.toUpperCase());
+          const isMatching = stateRef.current.inputValue.length > 0 &&
+            task.answer.startsWith(stateRef.current.inputValue.toUpperCase());
 
           // Draw power-up indicator if present
           if (task.powerUp) {
@@ -434,24 +434,24 @@ export default function Game() {
             let powerUpColor = '';
             let icon = '';
 
-            switch(task.powerUp) {
-                case 'slow': 
-                  powerUpText = 'SLOW'; 
-                  powerUpColor = '#34d399'; 
-                  icon = '⏱️';
-                  break;
-                case 'shield': 
-                  powerUpText = 'SHIELD'; 
-                  powerUpColor = '#60a5fa'; 
-                  icon = '🛡️';
-                  break;
-                case 'double': 
-                  powerUpText = '2X'; 
-                  powerUpColor = '#fbbf24'; 
-                  icon = '⚡';
-                  break;
+            switch (task.powerUp) {
+              case 'slow':
+                powerUpText = 'SLOW';
+                powerUpColor = '#34d399';
+                icon = '⏱️';
+                break;
+              case 'shield':
+                powerUpText = 'SHIELD';
+                powerUpColor = '#60a5fa';
+                icon = '🛡️';
+                break;
+              case 'double':
+                powerUpText = '2X';
+                powerUpColor = '#fbbf24';
+                icon = '⚡';
+                break;
             }
-            
+
             // Measure main text to center the label
             const textMetrics = ctx.measureText(task.text);
             const textWidth = textMetrics.width;
@@ -459,31 +459,31 @@ export default function Game() {
 
             // Pulse effect
             const pulse = Math.sin(now / 150) * 0.1 + 1; // 0.9 to 1.1
-            
+
             ctx.save();
             ctx.translate(centerX, task.y - 35);
             ctx.scale(pulse, pulse);
-            
+
             // Glow
             ctx.shadowBlur = 20;
             ctx.shadowColor = powerUpColor;
-            
+
             // Background Pill
             ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Dark slate background
             ctx.strokeStyle = powerUpColor;
             ctx.lineWidth = 2;
-            
+
             const label = `${icon} ${powerUpText}`;
             ctx.font = 'bold 12px "JetBrains Mono", monospace';
             const labelMetrics = ctx.measureText(label);
             const w = labelMetrics.width + 20;
             const h = 26;
-            
+
             // Draw rounded rect
             const x = -w / 2;
             const y = -h / 2;
             const r = h / 2;
-            
+
             ctx.beginPath();
             ctx.moveTo(x + r, y);
             ctx.lineTo(x + w - r, y);
@@ -495,16 +495,16 @@ export default function Game() {
             ctx.lineTo(x, y + r);
             ctx.quadraticCurveTo(x, y, x + r, y);
             ctx.closePath();
-            
+
             ctx.fill();
             ctx.stroke();
-            
+
             // Text
             ctx.fillStyle = powerUpColor;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(label, 0, 1);
-            
+
             ctx.restore();
           } else {
             ctx.shadowBlur = 0;
@@ -517,25 +517,25 @@ export default function Game() {
             ctx.shadowBlur = 20;
             ctx.shadowColor = task.color;
           } else if (task.powerUp) {
-             // Use power-up color for the task text if it has a power-up
-             let powerUpColor = '';
-             switch(task.powerUp) {
-                 case 'slow': powerUpColor = '#34d399'; break;
-                 case 'shield': powerUpColor = '#60a5fa'; break;
-                 case 'double': powerUpColor = '#fbbf24'; break;
-             }
-             ctx.fillStyle = powerUpColor;
+            // Use power-up color for the task text if it has a power-up
+            let powerUpColor = '';
+            switch (task.powerUp) {
+              case 'slow': powerUpColor = '#34d399'; break;
+              case 'shield': powerUpColor = '#60a5fa'; break;
+              case 'double': powerUpColor = '#fbbf24'; break;
+            }
+            ctx.fillStyle = powerUpColor;
           } else {
             ctx.fillStyle = task.color;
           }
-          
+
           ctx.fillText(task.text, task.x, task.y);
           ctx.shadowBlur = 0; // Reset
 
           // Check collision (bottom)
           if (task.y > CANVAS_HEIGHT) {
             stateRef.current.tasks.splice(i, 1);
-            
+
             // Only take damage if shield is NOT active
             const shieldActive = stateRef.current.activeEffects.shield > now;
             if (!shieldActive) {
@@ -576,7 +576,7 @@ export default function Game() {
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
-  const startGame = () => {
+  const startGame = useCallback(() => {
     setScore(0);
     setHealth(100);
     setLevel(1);
@@ -585,136 +585,136 @@ export default function Game() {
     stateRef.current.tasks = [];
     stateRef.current.particles = [];
     setGameState('playing');
-  };
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-white font-mono overflow-hidden">
       {/* Navbar */}
       <nav className="bg-[#151619] border-b border-gray-800 p-4 flex justify-between items-center shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-6">
-            {gameState !== 'menu' && (
-              <button
-                onClick={() => setGameState('menu')}
-                className="bg-[#0a0a0a] border border-gray-700 p-2 rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
-                title="Back to Menu"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-            
-            {/* Score */}
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
-                <Terminal className="text-blue-500 w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Score</div>
-                <div className="text-xl font-bold leading-none">{score.toString().padStart(6, '0')}</div>
-              </div>
-            </div>
+          {gameState !== 'menu' && (
+            <button
+              onClick={() => setGameState('menu')}
+              className="bg-[#0a0a0a] border border-gray-700 p-2 rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
+              title="Back to Menu"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
 
-            {/* Level */}
-            <div className="flex items-center gap-3 border-l border-gray-800 pl-6">
-              <div className="bg-purple-500/10 p-2 rounded-lg border border-purple-500/20">
-                <Cpu className="text-purple-500 w-5 h-5" />
+          {/* Score */}
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+              <Terminal className="text-blue-500 w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Score</div>
+              <div className="text-xl font-bold leading-none">{score.toString().padStart(6, '0')}</div>
+            </div>
+          </div>
+
+          {/* Level */}
+          <div className="flex items-center gap-3 border-l border-gray-800 pl-6">
+            <div className="bg-purple-500/10 p-2 rounded-lg border border-purple-500/20">
+              <Cpu className="text-purple-500 w-5 h-5" />
+            </div>
+            <div className="min-w-[100px]">
+              <div className="flex justify-between items-baseline mb-1">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Level {level}</div>
+                <div className="text-[10px] text-gray-400 font-mono">
+                  {score - (level - 1) * 500}/{500}
+                </div>
               </div>
-              <div className="min-w-[100px]">
-                <div className="flex justify-between items-baseline mb-1">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Level {level}</div>
-                  <div className="text-[10px] text-gray-400 font-mono">
-                    {score - (level - 1) * 500}/{500}
-                  </div>
-                </div>
-                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-purple-500 h-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, ((score - (level - 1) * 500) / 500) * 100))}%` }}
-                  />
-                </div>
+              <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-purple-500 h-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.max(0, ((score - (level - 1) * 500) / 500) * 100))}%` }}
+                />
               </div>
             </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
-            {/* Sound Toggle */}
-            <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="p-2 rounded-lg border border-gray-800 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-              title={`Sound ${soundEnabled ? 'On' : 'Off'} (M)`}
-            >
-              {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </button>
+          {/* Sound Toggle */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-2 rounded-lg border border-gray-800 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+            title={`Sound ${soundEnabled ? 'On' : 'Off'} (M)`}
+          >
+            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
 
-            {/* Active Power-ups */}
-            <div className="flex gap-2">
-              {activeEffects.slow > currentTime && (
-                <div className="bg-emerald-900/80 border border-emerald-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
-                  <div className="text-emerald-400 font-bold text-[10px]">SLOW</div>
-                  <div className="w-full bg-emerald-900/50 h-1 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-emerald-400 h-full transition-all duration-100" 
-                      style={{ width: `${Math.min(100, Math.max(0, (activeEffects.slow - currentTime) / 100))}%` }} 
-                    />
-                  </div>
+          {/* Active Power-ups */}
+          <div className="flex gap-2">
+            {activeEffects.slow > currentTime && (
+              <div className="bg-emerald-900/80 border border-emerald-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
+                <div className="text-emerald-400 font-bold text-[10px]">SLOW</div>
+                <div className="w-full bg-emerald-900/50 h-1 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-400 h-full transition-all duration-100"
+                    style={{ width: `${Math.min(100, Math.max(0, (activeEffects.slow - currentTime) / 100))}%` }}
+                  />
                 </div>
-              )}
-              {activeEffects.shield > currentTime && (
-                <div className="bg-blue-900/80 border border-blue-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
-                  <div className="text-blue-400 font-bold text-[10px]">SHIELD</div>
-                  <div className="w-full bg-blue-900/50 h-1 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-blue-400 h-full transition-all duration-100" 
-                      style={{ width: `${Math.min(100, Math.max(0, (activeEffects.shield - currentTime) / 100))}%` }} 
-                    />
-                  </div>
+              </div>
+            )}
+            {activeEffects.shield > currentTime && (
+              <div className="bg-blue-900/80 border border-blue-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
+                <div className="text-blue-400 font-bold text-[10px]">SHIELD</div>
+                <div className="w-full bg-blue-900/50 h-1 rounded-full overflow-hidden">
+                  <div
+                    className="bg-blue-400 h-full transition-all duration-100"
+                    style={{ width: `${Math.min(100, Math.max(0, (activeEffects.shield - currentTime) / 100))}%` }}
+                  />
                 </div>
-              )}
-              {activeEffects.double > currentTime && (
-                <div className="bg-amber-900/90 border border-amber-500 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-[0_0_15px_rgba(251,191,36,0.4)] backdrop-blur-sm min-w-[100px] animate-pulse">
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-                    <div className="text-amber-400 font-bold text-[10px]">2X SCORE</div>
-                  </div>
-                  <div className="w-full bg-amber-900/50 h-1 rounded-full overflow-hidden mt-0.5">
-                    <div 
-                      className="bg-amber-400 h-full transition-all duration-100" 
-                      style={{ width: `${Math.min(100, Math.max(0, (activeEffects.double - currentTime) / 100))}%` }} 
-                    />
-                  </div>
+              </div>
+            )}
+            {activeEffects.double > currentTime && (
+              <div className="bg-amber-900/90 border border-amber-500 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-[0_0_15px_rgba(251,191,36,0.4)] backdrop-blur-sm min-w-[100px] animate-pulse">
+                <div className="flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <div className="text-amber-400 font-bold text-[10px]">2X SCORE</div>
                 </div>
-              )}
-            </div>
+                <div className="w-full bg-amber-900/50 h-1 rounded-full overflow-hidden mt-0.5">
+                  <div
+                    className="bg-amber-400 h-full transition-all duration-100"
+                    style={{ width: `${Math.min(100, Math.max(0, (activeEffects.double - currentTime) / 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
-            {/* Health */}
-            <div className="flex items-center gap-3 border-l border-gray-800 pl-6">
-               <div className={`p-2 rounded-lg border ${health < 30 ? 'bg-red-500/10 border-red-500/20' : 'bg-green-500/10 border-green-500/20'}`}>
-                 <Activity className={`${health < 30 ? 'text-red-500 animate-pulse' : 'text-green-500'} w-5 h-5`} />
-               </div>
-               <div className="w-32">
-                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-bold">Buffer Integrity</div>
-                 <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
-                   <div 
-                     className={`h-full transition-all duration-300 ${health < 30 ? 'bg-red-500' : 'bg-green-500'}`} 
-                     style={{ width: `${health}%` }}
-                   />
-                 </div>
-               </div>
+          {/* Health */}
+          <div className="flex items-center gap-3 border-l border-gray-800 pl-6">
+            <div className={`p-2 rounded-lg border ${health < 30 ? 'bg-red-500/10 border-red-500/20' : 'bg-green-500/10 border-green-500/20'}`}>
+              <Activity className={`${health < 30 ? 'text-red-500 animate-pulse' : 'text-green-500'} w-5 h-5`} />
             </div>
+            <div className="w-32">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-bold">Buffer Integrity</div>
+              <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${health < 30 ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${health}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </nav>
 
       {/* Main Game Area */}
       <div className="relative flex-1 flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0a0a0a]">
-        
+
         {/* Canvas Layer */}
         <div className="relative border-2 border-gray-800 rounded-xl overflow-hidden shadow-2xl bg-[#151619] h-full w-full max-w-5xl aspect-[4/3] max-h-[70vh]">
-          <canvas 
-            ref={canvasRef} 
-            width={CANVAS_WIDTH} 
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
             className="block w-full h-full object-contain"
           />
-          
+
           {/* Scanline Overlay */}
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-[5] bg-[length:100%_2px,3px_100%] opacity-20"></div>
         </div>
@@ -736,17 +736,16 @@ export default function Game() {
               disabled={gameState !== 'playing'}
               autoFocus
               maxLength={gameMode === 'stream' ? 3 : undefined}
-              className={`w-full bg-[#151619] border-2 text-white font-mono text-lg rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-1 transition-all placeholder-gray-600 ${
-                inputError 
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+              className={`w-full bg-[#151619] border-2 text-white font-mono text-lg rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-1 transition-all placeholder-gray-600 ${inputError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-700 focus:border-green-500 focus:ring-green-500'
-              }`}
+                }`}
             />
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <span className="text-xs text-gray-500 animate-pulse">_</span>
             </div>
           </form>
-          
+
           {/* Keyboard Shortcuts Hint */}
           <div className="flex justify-center gap-6 mt-3 text-[10px] text-gray-500 font-mono uppercase tracking-wider">
             <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">ESC</kbd> Menu</span>
@@ -758,9 +757,9 @@ export default function Game() {
         {/* Overlays */}
         <AnimatePresence>
           {gameState === 'menu' && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 backdrop-blur-sm"
             >
@@ -772,16 +771,15 @@ export default function Game() {
                 </div>
                 <h1 className="text-4xl font-bold mb-2 tracking-tight">SYSTEM INITIALIZATION</h1>
                 <p className="text-gray-400 mb-8">Select a protocol to begin processing.</p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {/* CPU Overload Card */}
-                  <button 
+                  <button
                     onClick={() => setGameMode('cpu')}
-                    className={`p-6 rounded-xl border-2 transition-all text-left group ${
-                      gameMode === 'cpu' 
-                        ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)]' 
+                    className={`p-6 rounded-xl border-2 transition-all text-left group ${gameMode === 'cpu'
+                        ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
                         : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Cpu className={`w-6 h-6 ${gameMode === 'cpu' ? 'text-blue-400' : 'text-gray-500'}`} />
@@ -798,13 +796,12 @@ export default function Game() {
                   </button>
 
                   {/* Data Stream Card */}
-                  <button 
+                  <button
                     onClick={() => setGameMode('stream')}
-                    className={`p-6 rounded-xl border-2 transition-all text-left group ${
-                      gameMode === 'stream' 
-                        ? 'border-cyan-500 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.2)]' 
+                    className={`p-6 rounded-xl border-2 transition-all text-left group ${gameMode === 'stream'
+                        ? 'border-cyan-500 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
                         : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Activity className={`w-6 h-6 ${gameMode === 'stream' ? 'text-cyan-400' : 'text-gray-500'}`} />
@@ -826,11 +823,10 @@ export default function Game() {
                     <button
                       key={d}
                       onClick={() => setDifficulty(d)}
-                      className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${
-                        difficulty === d 
-                          ? 'bg-white text-black shadow-lg scale-105' 
+                      className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${difficulty === d
+                          ? 'bg-white text-black shadow-lg scale-105'
                           : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
-                      }`}
+                        }`}
                     >
                       {d}
                     </button>
@@ -838,19 +834,18 @@ export default function Game() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <button 
+                  <button
                     onClick={startGame}
-                    className={`w-full font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
-                      gameMode === 'cpu' 
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white' 
+                    className={`w-full font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] ${gameMode === 'cpu'
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
                         : 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                    }`}
+                      }`}
                   >
                     <Play className="w-5 h-5" />
                     INITIALIZE {gameMode === 'cpu' ? 'CPU' : 'STREAM'}
                   </button>
 
-                  <button 
+                  <button
                     onClick={() => setGameState('tutorial')}
                     className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
@@ -863,16 +858,16 @@ export default function Game() {
           )}
 
           {gameState === 'tutorial' && (
-            <Tutorial 
-              onComplete={() => setGameState('menu')} 
-              onExit={() => setGameState('menu')} 
+            <Tutorial
+              onComplete={() => setGameState('menu')}
+              onExit={() => setGameState('menu')}
             />
           )}
 
           {gameState === 'gameover' && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center bg-black/90 z-50 backdrop-blur-md"
             >
@@ -884,7 +879,7 @@ export default function Game() {
                 </div>
                 <h2 className="text-3xl font-bold mb-2 text-red-500">SYSTEM CRASHED</h2>
                 <p className="text-gray-400 mb-6">Buffer overflow detected.</p>
-                
+
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="bg-black/30 p-4 rounded-lg">
                     <div className="text-xs text-gray-500 uppercase">Final Score</div>
@@ -898,17 +893,17 @@ export default function Game() {
                     <div className="text-2xl font-bold text-white">{level}</div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-3">
-                  <button 
+                  <button
                     onClick={startGame}
                     className="w-full bg-white text-black hover:bg-gray-200 font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     <RotateCcw className="w-5 h-5" />
                     REBOOT SYSTEM
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={() => setGameState('menu')}
                     className="w-full bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
@@ -986,7 +981,7 @@ export default function Game() {
 
       {/* Toggle Reference Button */}
       {!showReference && (
-        <button 
+        <button
           onClick={() => setShowReference(true)}
           className="fixed right-4 bottom-4 bg-[#151619] border border-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors z-30"
           title="Open Reference"
