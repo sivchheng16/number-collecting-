@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Terminal, Cpu, Zap, Activity, BookOpen, X, Play, RotateCcw, ArrowLeft, GraduationCap, Volume2, VolumeX } from 'lucide-react';
 import Tutorial from './Tutorial';
+import { useLang } from '../LanguageContext';
 
 // --- Types ---
 
@@ -46,12 +47,12 @@ type HighScores = {
 // --- Constants ---
 
 const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
+const CANVAS_HEIGHT = 700;
 
 const DIFFICULTY_CONFIG = {
-  easy: { spawnRate: 3000, speedBase: 0.8, speedInc: 0.1 },
-  medium: { spawnRate: 2000, speedBase: 1.5, speedInc: 0.2 },
-  hard: { spawnRate: 1000, speedBase: 2.5, speedInc: 0.3 },
+  easy: { spawnRate: 3000, speedBase: 0.5, speedInc: 0.1 },
+  medium: { spawnRate: 2500, speedBase: 0.7, speedInc: 0.2 },
+  hard: { spawnRate: 2000, speedBase: 0.9, speedInc: 0.3 },
 };
 
 // --- Helper Functions ---
@@ -164,6 +165,7 @@ const generateTask = (level: number, width: number, difficulty: Difficulty, mode
 // --- Component ---
 
 export default function Game() {
+  const { t, lang, toggleLang } = useLang();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [gameState, setGameState] = useState<GameState>('menu');
@@ -389,13 +391,13 @@ export default function Game() {
       // Draw Grid (Retro feel)
       ctx.strokeStyle = '#222';
       ctx.lineWidth = 1;
-      for (let i = 0; i < CANVAS_WIDTH; i += 40) {
+      for (let i = 0; i < CANVAS_WIDTH; i += 35) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(i, CANVAS_HEIGHT);
         ctx.stroke();
       }
-      for (let i = 0; i < CANVAS_HEIGHT; i += 40) {
+      for (let i = 0; i < CANVAS_HEIGHT; i += 35) {
         ctx.beginPath();
         ctx.moveTo(0, i);
         ctx.lineTo(CANVAS_WIDTH, i);
@@ -588,7 +590,7 @@ export default function Game() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-white font-mono overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-white font-mono overflow-hidden gap-2">
       {/* Navbar */}
       <nav className="bg-[#151619] border-b border-gray-800 p-4 flex justify-between items-center shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-6">
@@ -596,7 +598,7 @@ export default function Game() {
             <button
               onClick={() => setGameState('menu')}
               className="bg-[#0a0a0a] border border-gray-700 p-2 rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
-              title="Back to Menu"
+              title={t('backToMenu')}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -608,7 +610,7 @@ export default function Game() {
               <Terminal className="text-blue-500 w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Score</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{t('score')}</div>
               <div className="text-xl font-bold leading-none">{score.toString().padStart(6, '0')}</div>
             </div>
           </div>
@@ -620,9 +622,9 @@ export default function Game() {
             </div>
             <div className="min-w-[100px]">
               <div className="flex justify-between items-baseline mb-1">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Level {level}</div>
-                <div className="text-[10px] text-gray-400 font-mono">
-                  {score - (level - 1) * 500}/{500}
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">{t('level')} {level}</div>
+                <div className="text-[10px] text-gray-400 font-mono" title="Points to next level">
+                  {score - (level - 1) * 500}/{500} XP
                 </div>
               </div>
               <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
@@ -640,16 +642,25 @@ export default function Game() {
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className="p-2 rounded-lg border border-gray-800 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-            title={`Sound ${soundEnabled ? 'On' : 'Off'} (M)`}
+            title={soundEnabled ? t('soundOn') : t('soundOff')}
           >
             {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
+
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLang}
+            className="p-2 rounded-lg border border-gray-800 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors text-xs font-bold tracking-wider min-w-[40px]"
+            title={lang === 'en' ? 'Switch to Khmer' : 'Switch to English'}
+          >
+            {lang === 'en' ? '🇰🇭' : '🇬🇧'} <span className="ml-0.5">{t('langLabel')}</span>
           </button>
 
           {/* Active Power-ups */}
           <div className="flex gap-2">
             {activeEffects.slow > currentTime && (
               <div className="bg-emerald-900/80 border border-emerald-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
-                <div className="text-emerald-400 font-bold text-[10px]">SLOW</div>
+                <div className="text-emerald-400 font-bold text-[10px]">{t('slow')}</div>
                 <div className="w-full bg-emerald-900/50 h-1 rounded-full overflow-hidden">
                   <div
                     className="bg-emerald-400 h-full transition-all duration-100"
@@ -660,7 +671,7 @@ export default function Game() {
             )}
             {activeEffects.shield > currentTime && (
               <div className="bg-blue-900/80 border border-blue-500/50 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-lg backdrop-blur-sm min-w-[80px]">
-                <div className="text-blue-400 font-bold text-[10px]">SHIELD</div>
+                <div className="text-blue-400 font-bold text-[10px]">{t('shield')}</div>
                 <div className="w-full bg-blue-900/50 h-1 rounded-full overflow-hidden">
                   <div
                     className="bg-blue-400 h-full transition-all duration-100"
@@ -673,7 +684,7 @@ export default function Game() {
               <div className="bg-amber-900/90 border border-amber-500 px-3 py-1.5 rounded-lg flex flex-col items-center gap-1 shadow-[0_0_15px_rgba(251,191,36,0.4)] backdrop-blur-sm min-w-[100px] animate-pulse">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  <div className="text-amber-400 font-bold text-[10px]">2X SCORE</div>
+                  <div className="text-amber-400 font-bold text-[10px]">{t('doubleScore')}</div>
                 </div>
                 <div className="w-full bg-amber-900/50 h-1 rounded-full overflow-hidden mt-0.5">
                   <div
@@ -691,7 +702,7 @@ export default function Game() {
               <Activity className={`${health < 30 ? 'text-red-500 animate-pulse' : 'text-green-500'} w-5 h-5`} />
             </div>
             <div className="w-32">
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-bold">Buffer Integrity</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-bold">{t('bufferIntegrity')}</div>
               <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-300 ${health < 30 ? 'bg-red-500' : 'bg-green-500'}`}
@@ -704,10 +715,10 @@ export default function Game() {
       </nav>
 
       {/* Main Game Area */}
-      <div className="relative flex-1 flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0a0a0a]">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-4 pb-2  overflow-hidden bg-[#0a0a0a]">
 
         {/* Canvas Layer */}
-        <div className="relative border-2 border-gray-800 rounded-xl overflow-hidden shadow-2xl bg-[#151619] h-full w-full max-w-5xl aspect-[4/3] max-h-[70vh]">
+        <div className="relative border-2 border-gray-800 rounded-xl overflow-hidden shadow-2xl bg-[#151619] h-full w-full max-w-5xl aspect-[4/3] max-h-[80vh]">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
@@ -720,11 +731,11 @@ export default function Game() {
         </div>
 
         {/* Input Area */}
-        <div className="mt-6 w-full max-w-2xl relative z-20">
+        <div className="mt-6 w-full max-w-5xl relative z-20">
           <form onSubmit={handleInputSubmit} className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            {/* <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <span className="text-green-500 font-bold">{'>'}</span>
-            </div>
+            </div> */}
             <motion.input
               animate={inputError ? { x: [-10, 10, -10, 10, 0] } : {}}
               transition={{ duration: 0.3 }}
@@ -732,25 +743,25 @@ export default function Game() {
               type="text"
               value={inputValue}
               onChange={handleInputChange}
-              placeholder={gameState === 'playing' ? "Type answer..." : "System Offline"}
+              placeholder={gameState === 'playing' ? t('typeAnswer') : t('sysOffline')}
               disabled={gameState !== 'playing'}
               autoFocus
               maxLength={gameMode === 'stream' ? 3 : undefined}
-              className={`w-full bg-[#151619] border-2 text-white font-mono text-lg rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-1 transition-all placeholder-gray-600 ${inputError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-700 focus:border-green-500 focus:ring-green-500'
+              className={`w-full bg-[#151619] border-2 text-white font-mono text-lg rounded-lg py-3 pl-10 pr-4 text-center focus:outline-none focus:ring-1 transition-all placeholder-gray-600 ${inputError
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-700 focus:border-green-500 focus:ring-green-500'
                 }`}
             />
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+            {/* <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <span className="text-xs text-gray-500 animate-pulse">_</span>
-            </div>
+            </div> */}
           </form>
 
           {/* Keyboard Shortcuts Hint */}
-          <div className="flex justify-center gap-6 mt-3 text-[10px] text-gray-500 font-mono uppercase tracking-wider">
-            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">ESC</kbd> Menu</span>
-            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">R</kbd> Restart</span>
-            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">M</kbd> Mute</span>
+          <div className="flex justify-center gap-6  mt-3 text-[10px] text-gray-500 font-mono uppercase tracking-wider">
+            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">ESC</kbd> {t('escMenu')}</span>
+            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">R</kbd> {t('restart')}</span>
+            <span className="flex items-center gap-1"><kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 text-gray-300">M</kbd> {t('mute')}</span>
           </div>
         </div>
 
@@ -769,29 +780,29 @@ export default function Game() {
                     <Zap className="w-10 h-10 text-blue-500" />
                   </div>
                 </div>
-                <h1 className="text-4xl font-bold mb-2 tracking-tight">SYSTEM INITIALIZATION</h1>
-                <p className="text-gray-400 mb-8">Select a protocol to begin processing.</p>
+                <h1 className="text-4xl font-bold mb-2 tracking-tight">{t('sysInit')}</h1>
+                <p className="text-gray-400 mb-8">{t('subtitle')}</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {/* CPU Overload Card */}
                   <button
                     onClick={() => setGameMode('cpu')}
                     className={`p-6 rounded-xl border-2 transition-all text-left group ${gameMode === 'cpu'
-                        ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
-                        : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
+                      ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                      : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
                       }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Cpu className={`w-6 h-6 ${gameMode === 'cpu' ? 'text-blue-400' : 'text-gray-500'}`} />
                       <div>
-                        <h3 className={`font-bold text-lg leading-none ${gameMode === 'cpu' ? 'text-white' : 'text-gray-300'}`}>CPU Overload</h3>
+                        <h3 className={`font-bold text-lg leading-none ${gameMode === 'cpu' ? 'text-white' : 'text-gray-300'}`}>{t('cpuOverload')}</h3>
                         <div className="text-xs text-gray-500 mt-1 font-mono">
-                          High Score ({difficulty}): {highScores.cpu[difficulty]}
+                          {t('highScore')} ({t(difficulty as 'easy' | 'medium' | 'hard')}): {highScores.cpu[difficulty]}
                         </div>
                       </div>
                     </div>
                     <p className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">
-                      Solve math & logic puzzles before they crash the system.
+                      {t('cpuDesc')}
                     </p>
                   </button>
 
@@ -799,21 +810,21 @@ export default function Game() {
                   <button
                     onClick={() => setGameMode('stream')}
                     className={`p-6 rounded-xl border-2 transition-all text-left group ${gameMode === 'stream'
-                        ? 'border-cyan-500 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
-                        : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
+                      ? 'border-cyan-500 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                      : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
                       }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Activity className={`w-6 h-6 ${gameMode === 'stream' ? 'text-cyan-400' : 'text-gray-500'}`} />
                       <div>
-                        <h3 className={`font-bold text-lg leading-none ${gameMode === 'stream' ? 'text-white' : 'text-gray-300'}`}>Data Stream</h3>
+                        <h3 className={`font-bold text-lg leading-none ${gameMode === 'stream' ? 'text-white' : 'text-gray-300'}`}>{t('dataStream')}</h3>
                         <div className="text-xs text-gray-500 mt-1 font-mono">
-                          High Score ({difficulty}): {highScores.stream[difficulty]}
+                          {t('highScore')} ({t(difficulty as 'easy' | 'medium' | 'hard')}): {highScores.stream[difficulty]}
                         </div>
                       </div>
                     </div>
                     <p className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">
-                      Type the incoming data packets as fast as possible.
+                      {t('streamDesc')}
                     </p>
                   </button>
                 </div>
@@ -824,11 +835,11 @@ export default function Game() {
                       key={d}
                       onClick={() => setDifficulty(d)}
                       className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${difficulty === d
-                          ? 'bg-white text-black shadow-lg scale-105'
-                          : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                        ? 'bg-white text-black shadow-lg scale-105'
+                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
                         }`}
                     >
-                      {d}
+                      {t(d as 'easy' | 'medium' | 'hard')}
                     </button>
                   ))}
                 </div>
@@ -837,12 +848,12 @@ export default function Game() {
                   <button
                     onClick={startGame}
                     className={`w-full font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] ${gameMode === 'cpu'
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                        : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-cyan-600 hover:bg-cyan-500 text-white'
                       }`}
                   >
                     <Play className="w-5 h-5" />
-                    INITIALIZE {gameMode === 'cpu' ? 'CPU' : 'STREAM'}
+                    {gameMode === 'cpu' ? t('initCpu') : t('initStream')}
                   </button>
 
                   <button
@@ -850,7 +861,7 @@ export default function Game() {
                     className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     <GraduationCap className="w-5 h-5" />
-                    TRAINING PROTOCOL
+                    {t('trainingProtocol')}
                   </button>
                 </div>
               </div>
@@ -877,21 +888,29 @@ export default function Game() {
                     <Activity className="w-10 h-10 text-red-500" />
                   </div>
                 </div>
-                <h2 className="text-3xl font-bold mb-2 text-red-500">SYSTEM CRASHED</h2>
-                <p className="text-gray-400 mb-6">Buffer overflow detected.</p>
+                <h2 className="text-3xl font-bold mb-2 text-red-500">{t('sysCrashed')}</h2>
+                <p className="text-gray-400 mb-6">{t('bufferOverflow')}</p>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-black/30 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 uppercase">Final Score</div>
+                    <div className="text-xs text-gray-500 uppercase">{t('finalScore')}</div>
                     <div className="text-2xl font-bold text-white">{score}</div>
                     {score >= highScores[gameMode][difficulty] && score > 0 && (
-                      <div className="text-xs text-yellow-500 font-bold mt-1 animate-pulse">NEW HIGH SCORE!</div>
+                      <div className="text-xs text-yellow-500 font-bold mt-1 animate-pulse">{t('newHighScore')}</div>
                     )}
                   </div>
                   <div className="bg-black/30 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 uppercase">Level Reached</div>
+                    <div className="text-xs text-gray-500 uppercase">{t('levelReached')}</div>
                     <div className="text-2xl font-bold text-white">{level}</div>
                   </div>
+                </div>
+
+                <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-3 mb-6 text-left">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">{t('tip')}</div>
+                  {level <= 2
+                    ? <p className="text-xs text-gray-400">{t('tipPowerup')}</p>
+                    : <p className="text-xs text-gray-400">{t('tipHealth')}</p>
+                  }
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -900,7 +919,7 @@ export default function Game() {
                     className="w-full bg-white text-black hover:bg-gray-200 font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     <RotateCcw className="w-5 h-5" />
-                    REBOOT SYSTEM
+                    {t('reboot')}
                   </button>
 
                   <button
@@ -908,7 +927,7 @@ export default function Game() {
                     className="w-full bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     <ArrowLeft className="w-5 h-5" />
-                    RETURN TO MENU
+                    {t('returnMenu')}
                   </button>
                 </div>
               </div>
@@ -923,7 +942,7 @@ export default function Game() {
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-blue-500" />
-              Reference
+              {t('referenceTitle')}
             </h3>
             <button onClick={() => setShowReference(false)} className="text-gray-500 hover:text-white">
               <X className="w-6 h-6" />
@@ -932,8 +951,26 @@ export default function Game() {
 
           <div className="space-y-8">
             <section>
-              <h4 className="text-sm font-bold text-green-500 uppercase tracking-wider mb-3 border-b border-green-500/20 pb-2">Binary (Base 2)</h4>
-              <p className="text-xs text-gray-400 mb-3">Prefix: <code className="text-green-400">0b</code>. Uses only 0 and 1.</p>
+              <h4 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-3 border-b border-yellow-400/20 pb-2">{t('powerUps')}</h4>
+              <div className="space-y-2 text-xs text-gray-400">
+                <div className="bg-gray-900 p-2 rounded flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold shrink-0">{t('slowPowerName')}</span>
+                  <span>{t('slowPowerDesc')}</span>
+                </div>
+                <div className="bg-gray-900 p-2 rounded flex items-start gap-2">
+                  <span className="text-blue-400 font-bold shrink-0">{t('shieldPowerName')}</span>
+                  <span>{t('shieldPowerDesc')}</span>
+                </div>
+                <div className="bg-gray-900 p-2 rounded flex items-start gap-2">
+                  <span className="text-amber-400 font-bold shrink-0">{t('doublePowerName')}</span>
+                  <span>{t('doublePowerDesc')}</span>
+                </div>
+                <p className="text-gray-600 text-[10px] pt-1">{t('powerGlowHint')}</p>
+              </div>
+            </section>
+            <section>
+              <h4 className="text-sm font-bold text-green-500 uppercase tracking-wider mb-3 border-b border-green-500/20 pb-2">{t('binaryTitle')}</h4>
+              <p className="text-xs text-gray-400 mb-3">{t('binaryPrefix')}<code className="text-green-400">0b</code>{t('binaryDesc')}</p>
               <div className="grid grid-cols-2 gap-2 text-sm font-mono">
                 <div className="bg-gray-900 p-2 rounded">0b1 = 1</div>
                 <div className="bg-gray-900 p-2 rounded">0b10 = 2</div>
@@ -945,8 +982,8 @@ export default function Game() {
             </section>
 
             <section>
-              <h4 className="text-sm font-bold text-purple-500 uppercase tracking-wider mb-3 border-b border-purple-500/20 pb-2">Hexadecimal (Base 16)</h4>
-              <p className="text-xs text-gray-400 mb-3">Prefix: <code className="text-purple-400">0x</code>. Uses 0-9 and A-F.</p>
+              <h4 className="text-sm font-bold text-purple-500 uppercase tracking-wider mb-3 border-b border-purple-500/20 pb-2">{t('hexTitle')}</h4>
+              <p className="text-xs text-gray-400 mb-3">{t('hexPrefix')}<code className="text-purple-400">0x</code>{t('hexDesc')}</p>
               <div className="grid grid-cols-2 gap-2 text-sm font-mono">
                 <div className="bg-gray-900 p-2 rounded">0xA = 10</div>
                 <div className="bg-gray-900 p-2 rounded">0xB = 11</div>
@@ -958,8 +995,8 @@ export default function Game() {
             </section>
 
             <section>
-              <h4 className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-3 border-b border-amber-500/20 pb-2">Modulo (%)</h4>
-              <p className="text-xs text-gray-400 mb-3">The remainder after division.</p>
+              <h4 className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-3 border-b border-amber-500/20 pb-2">{t('moduloTitle')}</h4>
+              <p className="text-xs text-gray-400 mb-3">{t('moduloDesc')}</p>
               <div className="space-y-2 text-sm font-mono">
                 <div className="bg-gray-900 p-2 rounded flex justify-between">
                   <span>10 % 3</span>
@@ -984,7 +1021,7 @@ export default function Game() {
         <button
           onClick={() => setShowReference(true)}
           className="fixed right-4 bottom-4 bg-[#151619] border border-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors z-30"
-          title="Open Reference"
+          title={t('openReference')}
         >
           <BookOpen className="w-6 h-6 text-gray-400" />
         </button>

@@ -4,7 +4,12 @@
  */
 
 import Game from './components/Game';
+import { LanguageProvider } from './LanguageContext';
 
 export default function App() {
-  return <Game />;
+  return (
+    <LanguageProvider>
+      <Game />
+    </LanguageProvider>
+  );
 }
