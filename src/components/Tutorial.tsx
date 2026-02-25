@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Keyboard, Check, ArrowRight, X } from 'lucide-react';
+import { useLang } from '../LanguageContext';
 
 interface TutorialProps {
   onComplete: () => void;
@@ -29,63 +30,8 @@ const KEY_MAP: Record<string, string> = {
   'N': 'r_index', 'M': 'r_index', ',': 'r_middle', '.': 'r_ring', '/': 'r_pinky'
 };
 
-const STEPS = [
-  {
-    title: "System Interface",
-    content: "Welcome, Operator. Your goal is to process incoming data packets before they breach the buffer. You must type the correct code to neutralize them.",
-    action: "press_any"
-  },
-  {
-    title: "Home Row Stance",
-    content: "Place your fingers on the Home Row (A-S-D-F and J-K-L-;). This is your base of operations.",
-    action: "press_any",
-    showKeyboard: true
-  },
-  {
-    title: "Number Reach",
-    content: "Reach up from the Home Row to strike the number keys. Return to base after each strike.",
-    action: "press_any",
-    showKeyboard: true,
-    highlightNumbers: true
-  },
-  {
-    title: "Drill: Left Hand",
-    content: "Type the numbers using your LEFT hand fingers.",
-    action: "type_sequence",
-    sequence: ['1', '2', '3', '4', '5'],
-    showKeyboard: true
-  },
-  {
-    title: "Drill: Right Hand",
-    content: "Type the numbers using your RIGHT hand fingers.",
-    action: "type_sequence",
-    sequence: ['6', '7', '8', '9', '0'],
-    showKeyboard: true
-  },
-  {
-    title: "Drill: Mixed",
-    content: "Type the sequence as it appears.",
-    action: "type_sequence",
-    sequence: ['1', '0', '3', '8', '5', '6'],
-    showKeyboard: true
-  },
-  {
-    title: "Training Complete",
-    content: "You are ready to engage the main system. Good luck, Operator.",
-    action: "press_any"
-  }
-];
-
-const FINGER_NAMES: Record<string, string> = {
-  l_pinky: 'Left Pinky',
-  l_ring: 'Left Ring',
-  l_middle: 'Left Middle',
-  l_index: 'Left Index',
-  r_index: 'Right Index',
-  r_middle: 'Right Middle',
-  r_ring: 'Right Ring',
-  r_pinky: 'Right Pinky',
-};
+// STEPS and FINGER_NAMES are defined inside the component (see below)
+// so they react to language changes via useLang()
 
 const HandOverlay = ({ activeFinger }: { activeFinger?: string }) => {
   const getFingerColor = (finger: string) => {
@@ -185,6 +131,65 @@ const HandOverlay = ({ activeFinger }: { activeFinger?: string }) => {
 };
 
 export default function Tutorial({ onComplete, onExit }: TutorialProps) {
+  const { t } = useLang();
+
+  const STEPS = useMemo(() => [
+    {
+      title: t('t1Title'),
+      content: t('t1Content'),
+      action: "press_any"
+    },
+    {
+      title: t('t2Title'),
+      content: t('t2Content'),
+      action: "press_any",
+      showKeyboard: true
+    },
+    {
+      title: t('t3Title'),
+      content: t('t3Content'),
+      action: "press_any",
+      showKeyboard: true,
+      highlightNumbers: true
+    },
+    {
+      title: t('t4Title'),
+      content: t('t4Content'),
+      action: "type_sequence",
+      sequence: ['1', '2', '3', '4', '5'],
+      showKeyboard: true
+    },
+    {
+      title: t('t5Title'),
+      content: t('t5Content'),
+      action: "type_sequence",
+      sequence: ['6', '7', '8', '9', '0'],
+      showKeyboard: true
+    },
+    {
+      title: t('t6Title'),
+      content: t('t6Content'),
+      action: "type_sequence",
+      sequence: ['1', '0', '3', '8', '5', '6'],
+      showKeyboard: true
+    },
+    {
+      title: t('t7Title'),
+      content: t('t7Content'),
+      action: "press_any"
+    }
+  ], [t]);
+
+  const FINGER_NAMES: Record<string, string> = {
+    l_pinky: t('lPinky'),
+    l_ring: t('lRing'),
+    l_middle: t('lMiddle'),
+    l_index: t('lIndex'),
+    r_index: t('rIndex'),
+    r_middle: t('rMiddle'),
+    r_ring: t('rRing'),
+    r_pinky: t('rPinky'),
+  };
   const [currentStep, setCurrentStep] = useState(0);
   const [sequenceIndex, setSequenceIndex] = useState(0);
   const [input, setInput] = useState('');
@@ -318,10 +323,13 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
     }
   };
 
+  const isNumberKey = (char: string) => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(char);
+
   const renderKey = (char: string, label?: string) => {
     const finger = KEY_MAP[char];
     const colorClass = finger ? FINGER_COLORS[finger as keyof typeof FINGER_COLORS] : 'bg-gray-700';
     const isTarget = step.action === 'type_sequence' && step.sequence![sequenceIndex] === char;
+    const isNumberHighlight = step.highlightNumbers && isNumberKey(char);
 
     // All mapped keys show their finger color at full brightness
     let bgClass = 'bg-gray-800 text-gray-400';
@@ -334,6 +342,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
         relative w-10 h-10 rounded flex flex-col items-center justify-center text-sm font-bold border-b-4 transition-all
         ${bgClass}
         ${isTarget ? 'scale-110 border-white z-10 ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.8)] brightness-125' : 'border-black/20'}
+        ${isNumberHighlight ? 'ring-2 ring-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.6)] brightness-125' : ''}
       `}>
         <span>{char}</span>
         {label && <span className="text-[8px] absolute bottom-0.5 opacity-50">{label}</span>}
@@ -353,14 +362,14 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
         onClick={onExit}
         className="absolute top-8 right-8 text-gray-500 hover:text-white flex items-center gap-2"
       >
-        <X className="w-5 h-5" /> EXIT TRAINING
+        <X className="w-5 h-5" /> {t('exitTraining')}
       </button>
 
       <div className="max-w-3xl w-full flex flex-col items-center">
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-blue-500 mb-4 tracking-tight">TRAINING PROTOCOL <span className="text-white">0{currentStep + 1}</span></h2>
+          <h2 className="text-3xl font-bold text-blue-500 mb-4 tracking-tight">{t('trainingProtocolTitle')} <span className="text-white">0{currentStep + 1}</span></h2>
           <h3 className="text-2xl text-white font-bold mb-4">{step.title}</h3>
-          <p className="text-xl text-gray-400">{step.content}</p>
+          <p className="text-xl text-gray-400 whitespace-pre-line">{step.content}</p>
         </div>
 
         {/* Dynamic Content Area */}
@@ -382,7 +391,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
 
               {activeFinger && (
                 <div className="text-lg font-mono text-blue-400 animate-pulse bg-blue-900/20 px-4 py-2 rounded-full border border-blue-500/30">
-                  Use <span className="font-bold text-white">{FINGER_NAMES[activeFinger]}</span> to press <span className="font-bold text-white">{targetChar}</span>
+                  {t('useFinger')} <span className="font-bold text-white">{FINGER_NAMES[activeFinger]}</span> {t('toPress')} <span className="font-bold text-white">{targetChar}</span>
                 </div>
               )}
             </div>
@@ -441,7 +450,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
               onClick={nextStep}
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold flex items-center gap-3 animate-pulse"
             >
-              CONTINUE <ArrowRight className="w-5 h-5" />
+              {t('continue')} <ArrowRight className="w-5 h-5" />
             </button>
           ) : (
             <div className="relative">
@@ -468,7 +477,7 @@ export default function Tutorial({ onComplete, onExit }: TutorialProps) {
               />
               {isError && (
                 <div className="absolute top-full left-0 right-0 text-center text-red-500 text-xs font-bold mt-2 animate-bounce">
-                  INCORRECT KEY
+                  {t('incorrectKey')}
                 </div>
               )}
             </div>
